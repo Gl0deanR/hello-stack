@@ -1,0 +1,19 @@
+# Multi-stage production build: compile the Vite app, then serve the static
+# bundle with nginx (which also proxies /api to the backend).
+FROM node:24-alpine AS build
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm install
+COPY . .
+# VITE_* vars must be present at build time to be baked into the bundle.
+# Empty keeps requests on the same origin (/api/v1/...). Do not set this to /api.
+ARG VITE_API_URL=
+ARG VITE_APP_NAME="Full App Template"
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_APP_NAME=$VITE_APP_NAME
+RUN npm run build
+
+FROM nginx:1.30-alpine
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/dist /usr/share/nginx/html
+EXPOSE 80

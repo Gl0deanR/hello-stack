@@ -1,0 +1,90 @@
+# Optional overlay: Celery worker + beat, Flower, and a Caddy reverse proxy.
+# Redis already runs in docker-compose.yml. Enable with:
+#   docker compose -f docker-compose.yml -f docker-compose.optional.yml up
+#
+# Delete this file (and Caddyfile, app/celery_app.py, app/tasks/, and the
+# celery/redis/flower lines in backend/requirements.txt) if you never need
+# background jobs or a proxy.
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      TZ: Europe/Bucharest
+    env_file:
+      - .env
+    command: celery -A app.celery_app worker --loglevel=info
+    depends_on:
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    logging: *default-logging
+    networks:
+      - app_network
+
+  celery_beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      TZ: Europe/Bucharest
+    env_file:
+      - .env
+    command: sh -c "mkdir -p /tmp/celerybeat && celery -A app.celery_app beat --loglevel=info -s /tmp/celerybeat/schedule"
+    depends_on:
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    logging: *default-logging
+    networks:
+      - app_network
+
+  flower:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      TZ: Europe/Bucharest
+    env_file:
+      - .env
+    command: celery -A app.celery_app flower --port=5555 --basic_auth=${FLOWER_USER:-admin}:${FLOWER_PASSWORD:-admin}
+    ports:
+      - "${FLOWER_PORT:-5555}:5555"
+    depends_on:
+      redis:
+        condition: service_healthy
+    logging: *default-logging
+    networks:
+      - app_network
+
+  # One entrypoint: /api -> backend, everything else -> frontend.
+  # The dev frontend still calls VITE_API_URL / NEXT_PUBLIC_API_URL directly.
+  # Point that URL at this proxy when you want the browser to use a single port.
+  caddy:
+    image: caddy:2-alpine
+    environment:
+      TZ: Europe/Bucharest
+    ports:
+      - "${PROXY_PORT:-8080}:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - backend
+      - frontend
+    logging: *default-logging
+    networks:
+      - app_network

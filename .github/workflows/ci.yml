@@ -1,0 +1,74 @@
+name: check
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+      - name: Install and import the API
+        working-directory: templates/react-app/backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          python -m compileall app alembic
+          python - << 'PY'
+          from app.celery_app import celery_app
+          from app.main import app
+          from app.utils.security import (
+              create_access_token,
+              decode_access_token,
+              hash_password,
+              verify_password,
+          )
+
+          hashed = hash_password("secret")
+          assert verify_password("secret", hashed)
+          token = create_access_token(1)
+          assert decode_access_token(token) == "1"
+          paths = set(app.openapi()["paths"])
+          assert "/api/v1/health" in paths
+          assert "/api/v1/auth/login" in paths
+          assert "/api/v1/items" in paths
+          assert any(name.endswith("example_task") for name in celery_app.tasks)
+          PY
+      - name: Confirm the Next backend matches
+        run: diff -rq templates/react-app/backend templates/next-app/backend
+
+  react:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: templates/react-app/frontend/package-lock.json
+      - name: Build the Vite app
+        working-directory: templates/react-app/frontend
+        run: |
+          npm ci
+          npm run build
+
+  next:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: templates/next-app/frontend/package-lock.json
+      - name: Build the Next.js app
+        working-directory: templates/next-app/frontend
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8000
+        run: |
+          npm ci
+          npm run build

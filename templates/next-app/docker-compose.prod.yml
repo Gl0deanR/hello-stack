@@ -1,0 +1,82 @@
+# Production stack. Differences from dev:
+#   - no source volume mounts, no --reload
+#   - frontend is built with Next.js standalone output and run with `node server.js`
+#   - db port is NOT published to the host
+#   - redis, pgadmin, and Celery are omitted
+#
+# A reverse proxy (Caddy / Nginx Proxy Manager) in front is recommended to
+# terminate TLS and route /api -> backend, / -> frontend. See ../../docs/DEPLOY.md.
+#
+# Usage:
+#   docker compose -f docker-compose.prod.yml up -d --build
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      TZ: Europe/Bucharest
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      # postgres:18+ stores data in a versioned subdir; mount at the parent.
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    logging: *default-logging
+    networks:
+      - app_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      TZ: Europe/Bucharest
+    env_file:
+      - .env
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: /bin/sh -lc "alembic upgrade head && python -m app.seed && uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4"
+    restart: unless-stopped
+    logging: *default-logging
+    networks:
+      - app_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+      args:
+        # Browser-reachable API origin, with no /api suffix. Paths already
+        # include /api/v1. Leave empty to call the same origin.
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_APP_NAME: ${APP_NAME}
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    logging: *default-logging
+    networks:
+      - app_network
+
+volumes:
+  postgres_data:
+
+networks:
+  app_network:
+    driver: bridge
