@@ -33,10 +33,13 @@ PGADMIN_PORT="${port_base}49"
 FLOWER_PORT="${port_base}55"
 PROXY_PORT="${port_base}80"
 
+# Flower gets its own password so it does not share the JWT signing key.
 if command -v python3 >/dev/null 2>&1; then
   secret="$(python3 -c 'import secrets; print(secrets.token_urlsafe(48))')"
+  flower_secret="$(python3 -c 'import secrets; print(secrets.token_urlsafe(24))')"
 else
   secret="$(openssl rand -base64 48 | tr -d '\n/+=' | cut -c1-48)"
+  flower_secret="$(openssl rand -base64 24 | tr -d '\n/+=' | cut -c1-24)"
 fi
 
 cp .env.example .env
@@ -51,7 +54,7 @@ sedi "s|^PGADMIN_PORT=.*|PGADMIN_PORT=${PGADMIN_PORT}|"
 sedi "s|^FLOWER_PORT=.*|FLOWER_PORT=${FLOWER_PORT}|"
 sedi "s|^PROXY_PORT=.*|PROXY_PORT=${PROXY_PORT}|"
 sedi "s|^REDIS_PORT=.*|REDIS_PORT=${REDIS_PORT}|"
-sedi "s|^FLOWER_PASSWORD=.*|FLOWER_PASSWORD=${secret}|"
+sedi "s|^FLOWER_PASSWORD=.*|FLOWER_PASSWORD=${flower_secret}|"
 sedi "s|^API_PUBLIC_URL=.*|API_PUBLIC_URL=http://localhost:${BACKEND_PORT}|"
 sedi "s|^APP_URL=.*|APP_URL=http://localhost:${FRONTEND_PORT}|"
 sedi "s|^NEXT_PUBLIC_API_URL=.*|NEXT_PUBLIC_API_URL=http://localhost:${BACKEND_PORT}|"

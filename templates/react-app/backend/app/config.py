@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     )
 
     # --- App ---
-    app_name: str = "Full App Template"
+    app_name: str = "hello-stack"
     app_env: str = "development"  # development | production
     app_url: str = "http://localhost:5173"
     api_public_url: str = "http://localhost:8000"

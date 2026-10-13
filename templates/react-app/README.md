@@ -1,21 +1,23 @@
-# React + FastAPI Full-Stack Template
+# hello-stack — React + FastAPI
 
 A dockerized, clone-and-go starter: **React (Vite) + Tailwind** frontend, **FastAPI + SQLAlchemy + Alembic** backend, **PostgreSQL**, and **pgAdmin** — with working JWT auth and a sample CRUD resource already wired end to end.
 
 ## Quick start
 
 ```bash
-./init.sh                 # creates .env, generates SECRET_KEY, picks ports
+./init.sh                 # creates .env, generates secrets, picks ports
 docker compose up --build
 ```
 
-Then open:
+`init.sh` prints the URLs. With the default port base `80`:
 
-| Service  | URL (default ports)      | Notes                            |
+| Service  | URL                      | Notes                            |
 |----------|--------------------------|----------------------------------|
-| Frontend | http://localhost:5173    | login / register / items demo    |
-| Backend  | http://localhost:8000    | OpenAPI docs at `/docs`           |
-| pgAdmin  | http://localhost:5050    | server pre-registered            |
+| Frontend | http://localhost:8040    | login / register / items demo    |
+| Backend  | http://localhost:8041    | OpenAPI docs at `/docs`          |
+| pgAdmin  | http://localhost:8049    | server pre-registered            |
+
+Skip `init.sh` and copy `.env.example` yourself if you want the classic local ports (5173 / 8000 / 5050).
 
 Register a user in the UI, then create/delete items — that round-trip exercises auth + a protected API.
 

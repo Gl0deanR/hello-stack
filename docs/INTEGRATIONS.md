@@ -81,9 +81,9 @@ Legend: ⭐ = build first for most SaaS apps · 🔁 = pick one of the group
 
 - [ ] ⭐ **Ruff + mypy** (backend), **ESLint + Prettier** (frontend) — pre-commit hooks.
 - [ ] **pytest + httpx** backend test suite (a sample test for auth + items CRUD).
-- [ ] **GitHub Actions CI** — lint, test, build images on PR.
+- [x] **GitHub Actions CI** — compile backends, OpenAPI/JWT/Celery smoke, `diff` the two backend copies, and `npm run build` for both frontends. Lint, pytest, and image builds are still open.
 - [ ] **OpenAPI client generation** — generate a typed frontend API client from `/openapi.json`.
-- [ ] **Seed script** — `backend/seed.py` to create a demo user + sample data.
+- [x] **Seed hook** — `python -m app.seed` runs after Alembic on boot. Default `main()` is a no-op; add a demo user or sample rows there.
 
 ## 🌍 Product Features (common needs)
 
@@ -103,4 +103,4 @@ Legend: ⭐ = build first for most SaaS apps · 🔁 = pick one of the group
 2. Stripe (or LemonSqueezy) subscriptions + webhook
 3. Sentry on both ends
 4. S3/R2 uploads (if the product needs files)
-5. Ruff/ESLint + a CI pipeline
+5. Ruff/ESLint in CI

@@ -1,7 +1,7 @@
 # Production stack. Differences from dev:
 #   - no source volume mounts, no --reload
 #   - frontend is built with Next.js standalone output and run with `node server.js`
-#   - db port is NOT published to the host
+#   - db and API ports are NOT published to the host
 #   - redis, pgadmin, and Celery are omitted
 #
 # A reverse proxy (Caddy / Nginx Proxy Manager) in front is recommended to
@@ -45,8 +45,6 @@ services:
       TZ: Europe/Bucharest
     env_file:
       - .env
-    ports:
-      - "${BACKEND_PORT:-8000}:8000"
     depends_on:
       db:
         condition: service_healthy
@@ -65,6 +63,10 @@ services:
         # include /api/v1. Leave empty to call the same origin.
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
         NEXT_PUBLIC_APP_NAME: ${APP_NAME}
+    environment:
+      TZ: Europe/Bucharest
+      HOSTNAME: "0.0.0.0"
+      PORT: "3000"
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     depends_on:

@@ -16,7 +16,7 @@ export default function AppShell({ children }) {
     <div className="min-h-screen flex">
       <aside className="w-60 shrink-0 border-r border-slate-200 bg-white flex flex-col">
         <div className="px-5 py-4 text-lg font-semibold border-b border-slate-200">
-          Full App
+          {import.meta.env.VITE_APP_NAME || "hello-stack"}
         </div>
         <nav className="flex-1 p-3 space-y-1">
           {nav.map(({ to, label, icon: Icon }) => (

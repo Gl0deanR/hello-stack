@@ -1,4 +1,4 @@
-# Full App Template
+# hello-stack
 
 Clone-and-go, dockerized full-stack starters: **FastAPI + SQLAlchemy + Alembic +
 PostgreSQL** with **JWT auth** and a working sample CRUD resource, plus your
@@ -23,9 +23,12 @@ copy stands alone. Inside this repository, change both backend trees together.
 cp -R templates/react-app ~/apps/my-new-app
 cd ~/apps/my-new-app
 
-./init.sh                 # creates .env, generates SECRET_KEY, assigns ports
+./init.sh                 # creates .env, generates secrets, assigns ports
 docker compose up --build
 ```
+
+`init.sh` prints the URLs. With the default port base `80` they are
+`8040` (web), `8041` (API, docs at `/docs`), and `8049` (pgAdmin).
 
 You get login/register + an items CRUD demo, the API with Swagger docs at
 `/docs`, and pgAdmin with the database connection pre-registered.
@@ -37,9 +40,10 @@ You get login/register + an items CRUD demo, the API with Swagger docs at
   Flower (basic auth), and a Caddy reverse proxy.
 - **Production compose** (`docker-compose.prod.yml`): no reload, built frontend,
   database port not published, no pgAdmin or Redis.
-- **`init.sh`** writes `.env`, generates `SECRET_KEY`, and assigns a host port
-  block (`xx40` web, `xx41` API, `xx42` database, `xx43` Redis, `xx49` pgAdmin,
-  `xx55` Flower, `xx80` proxy) so several clones can run side by side.
+- **`init.sh`** writes `.env`, generates `SECRET_KEY` and a separate
+  `FLOWER_PASSWORD`, and assigns a host port block (`xx40` web, `xx41` API,
+  `xx42` database, `xx43` Redis, `xx49` pgAdmin, `xx55` Flower, `xx80` proxy)
+  so several clones can run side by side.
 - **API** is mounted at `/api/v1`. Swagger stays at `/docs`.
 
 ## Docs

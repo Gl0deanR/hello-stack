@@ -34,7 +34,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
     <div className="min-h-screen flex">
       <aside className="w-60 shrink-0 border-r border-slate-200 bg-white flex flex-col">
         <div className="px-5 py-4 text-lg font-semibold border-b border-slate-200">
-          Full App
+          {process.env.NEXT_PUBLIC_APP_NAME || "hello-stack"}
         </div>
         <nav className="flex-1 p-3 space-y-1">
           {nav.map(({ href, label, icon: Icon }) => (

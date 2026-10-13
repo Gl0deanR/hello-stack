@@ -10,7 +10,9 @@ In `.env` on the server, set production values:
 - `CORS_ORIGINS` — your real frontend origin(s)
 - `NEXT_PUBLIC_API_URL` / `VITE_API_URL` — the public API **origin**, with no `/api` suffix. Paths already start with `/api/v1`. Leave the value empty when nginx or another proxy serves the app and the API on one host. The React production image does this for you.
 
-The prod compose does **not** publish the Postgres port and **omits pgAdmin**.
+The prod compose does **not** publish the Postgres port, **omits pgAdmin**,
+and does **not** publish the API port. The backend is reachable on the compose
+network as `backend:8000`.
 
 ## Bring it up
 
@@ -22,8 +24,10 @@ docker compose -f docker-compose.prod.yml up -d --build
   bundle and proxying `/api` to the backend — so the frontend container is the
   single web entrypoint.
 - **Next template:** the frontend runs the Next standalone server on port 3000;
-  the backend is separate on 8000. Put a proxy in front to route both under one
-  domain (`/api` → backend, `/` → frontend).
+  the backend stays on the internal network. Put a proxy in front to route both
+  under one domain (`/api` → `backend:8000`, `/` → frontend). Set
+  `NEXT_PUBLIC_API_URL` to that public origin, or leave it empty for same-origin
+  calls through the proxy.
 
 ## Reverse proxy / TLS
 
