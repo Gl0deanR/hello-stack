@@ -39,7 +39,7 @@ jobs:
           assert any(name.endswith("example_task") for name in celery_app.tasks)
           PY
       - name: Confirm the Next backend matches
-        run: diff -rq templates/react-app/backend templates/next-app/backend
+        run: diff -rq -x __pycache__ -x '*.pyc' templates/react-app/backend templates/next-app/backend
 
   react:
     runs-on: ubuntu-latest
